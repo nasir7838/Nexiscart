@@ -1,6 +1,5 @@
 "use client";
 
-import { useSearchParams } from 'next/navigation';
 import ProductCard from './ProductCard';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
@@ -11,16 +10,21 @@ interface CategoryPageProps {
     id: string;
     name: string;
     description: string;
+    subcategories: Array<{
+      id: string;
+      name: string;
+    }>;
   };
-  subcategories: Array<{
+  subcategory?: {
     id: string;
     name: string;
-    href: string;
-  }>;
+    description?: string;
+  };
   products: Array<{
     id: number;
     name: string;
     price: number;
+    originalPrice?: number;
     image: string;
     rating: number;
     reviewCount: number;
@@ -29,15 +33,11 @@ interface CategoryPageProps {
   }>;
 }
 
-export function CategoryPage({ category, subcategories, products }: CategoryPageProps) {
-  const searchParams = useSearchParams();
-  const subcategory = searchParams.get('subcategory');
-
-  // Filter products by subcategory if one is selected
-  const filteredProducts = subcategory 
-    ? products.filter(p => p.subcategory === subcategory)
-    : products;
-
+export function CategoryPage({ 
+  category, 
+  subcategory,
+  products 
+}: CategoryPageProps) {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-6">
@@ -48,48 +48,53 @@ export function CategoryPage({ category, subcategories, products }: CategoryPage
           </Link>
         </Button>
         
-        <h1 className="text-3xl font-bold mb-2">{category.name}</h1>
-        <p className="text-gray-600 mb-6">{category.description}</p>
-        
-        {/* Subcategories */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-3">Shop by Category</h2>
-          <div className="flex flex-wrap gap-2">
+        <h1 className="text-3xl font-bold mb-2">
+          {subcategory ? subcategory.name : category.name}
+        </h1>
+        <p className="text-gray-600 mb-6">
+          {subcategory?.description || category.description}
+        </p>
+
+        {/* Subcategory Navigation */}
+        {category.subcategories && category.subcategories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
             <Button
               variant={!subcategory ? 'default' : 'outline'}
               asChild
             >
-              <Link href={`/category/${category.id}`}>All {category.name}</Link>
+              <Link href={`/category/${category.id}`}>
+                All {category.name}
+              </Link>
             </Button>
-            {subcategories.map((sub) => (
+            {category.subcategories.map((sub) => (
               <Button
                 key={sub.id}
-                variant={sub.id === subcategory ? 'default' : 'outline'}
+                variant={subcategory?.id === sub.id ? 'default' : 'outline'}
                 asChild
               >
-                <Link href={`/category/${category.id}?subcategory=${sub.id}`}>
+                <Link 
+                  href={`/category/${category.id}/${sub.id}`}
+                >
                   {sub.name}
                 </Link>
               </Button>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
       {/* Products Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredProducts.map((product) => (
-          <ProductCard key={product.id} product={product} />
-        ))}
-      </div>
-
-      {filteredProducts.length === 0 && (
+      {products.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      ) : (
         <div className="text-center py-12">
-          <p className="text-gray-500">
-            {subcategory 
-              ? `No products found in ${subcategories.find(s => s.id === subcategory)?.name || 'this category'}.`
-              : 'No products found in this category.'
-            }
+          <h3 className="text-lg font-medium text-gray-900">No products found</h3>
+          <p className="mt-1 text-gray-500">
+            We couldn't find any products in this category.
           </p>
         </div>
       )}

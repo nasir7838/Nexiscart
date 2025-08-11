@@ -6,6 +6,7 @@ import { CategoryPage } from '@/app/components/CategoryPage';
 interface Subcategory {
   id: string;
   name: string;
+  description?: string;
 }
 
 interface Category {
@@ -16,10 +17,10 @@ interface Category {
 }
 
 interface Product {
-  id: number; 
+  id: number;
   name: string;
   price: number;
-  originalPrice?: number; 
+  originalPrice?: number;
   image: string;
   rating: number;
   reviewCount: number;
@@ -27,7 +28,7 @@ interface Product {
   subcategory: string;
 }
 
-// This would typically come from your database/API
+// Mock data - in a real app, this would come from an API
 const categoriesData: Record<string, Category> = {
   electronics: {
     id: 'electronics',
@@ -140,7 +141,7 @@ const categoriesData: Record<string, Category> = {
   }
 };
 
-// Mock products database - replace with actual API calls
+// Mock products database
 const allProducts: Record<string, Product[]> = {
   electronics: [
     { id: 1, name: 'Premium Smartphone X1', price: 999, image: '/placeholder-product.svg', rating: 4.5, reviewCount: 128, category: 'electronics', subcategory: 'smartphones' },
@@ -185,19 +186,11 @@ interface PageProps {
     categoryId: string;
     subcategoryId: string;
   };
-  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-// This component wraps the main content in a Suspense boundary
-function CategoryPageWrapper({
-  categoryId,
-  subcategoryId,
-  searchParams,
-}: {
-  categoryId: string;
-  subcategoryId: string;
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
+export default async function SubcategoryPage({ params }: PageProps) {
+  const { categoryId, subcategoryId } = params;
+  
   const category = categoriesData[categoryId];
   
   if (!category) {
@@ -218,22 +211,11 @@ function CategoryPageWrapper({
   );
 
   return (
-    <CategoryPage
-      category={category}
-      subcategory={subcategory}
-      products={products}
-      searchParams={searchParams}
-    />
-  );
-}
-
-export default async function SubcategoryPage({ params, searchParams }: PageProps) {
-  return (
     <Suspense fallback={<div>Loading...</div>}>
-      <CategoryPageWrapper 
-        categoryId={params.categoryId} 
-        subcategoryId={params.subcategoryId}
-        searchParams={searchParams}
+      <CategoryPage 
+        category={category}
+        subcategory={subcategory}
+        products={products}
       />
     </Suspense>
   );
@@ -278,5 +260,5 @@ export async function generateStaticParams() {
 }
 
 export const dynamicParams = false; // Return 404 for not generated pages
-
+export const dynamic = 'error'; // Throw an error if any dynamic API routes are used
 export const revalidate = 3600; // Revalidate at most every hour

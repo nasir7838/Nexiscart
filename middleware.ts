@@ -94,3 +94,42 @@ export const config = {
     '/((?!api/auth|_next/static|_next/image|favicon.ico|public/|.*\..*).*)',
   ],
 };
+
+// New middleware for dynamic API routes
+export const apiMiddleware = {
+  config: {
+    matcher: [
+      /*
+       * Match all request paths except for the ones starting with:
+       * - _next/static (static files)
+       * - _next/image (image optimization files)
+       * - favicon.ico (favicon file)
+       */
+      '/((?!_next/static|_next/image|favicon.ico).*)',
+    ],
+  },
+  middleware: (request: NextRequest) => {
+    // Clone the request headers
+    const requestHeaders = new Headers(request.headers);
+    
+    // Add CORS headers
+    requestHeaders.set('Access-Control-Allow-Origin', '*');
+    requestHeaders.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    requestHeaders.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    // Handle preflight requests
+    if (request.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 200,
+        headers: requestHeaders,
+      });
+    }
+
+    // Continue with the request
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  },
+};
