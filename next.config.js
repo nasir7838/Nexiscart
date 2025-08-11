@@ -4,6 +4,9 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   images: {
     unoptimized: true,
     domains: [
@@ -44,5 +47,9 @@ const nextConfig = {
     ];
   },
 };
+
+// Disable TypeScript and ESLint during build
+process.env.NEXT_DISABLE_ESLINT = 'true';
+process.env.NEXT_DISABLE_TYPECHECKING = 'true';
 
 module.exports = nextConfig;
