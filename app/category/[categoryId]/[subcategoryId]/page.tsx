@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { CategoryPage } from '@/app/components/CategoryPage';
 
 // Types
@@ -15,10 +16,10 @@ interface Category {
 }
 
 interface Product {
-  id: number; // Changed from string to number to match CategoryPage's expectation
+  id: number; 
   name: string;
   price: number;
-  originalPrice?: number; // Added for showing original price when there's a discount
+  originalPrice?: number; 
   image: string;
   rating: number;
   reviewCount: number;
@@ -184,12 +185,19 @@ interface PageProps {
     categoryId: string;
     subcategoryId: string;
   };
+  searchParams: { [key: string]: string | string[] | undefined };
 }
 
-export default async function SubcategoryPage({ params }: PageProps) {
-  // Destructure after awaiting params
-  const { categoryId, subcategoryId } = await Promise.resolve(params);
-  
+// This component wraps the main content in a Suspense boundary
+function CategoryPageWrapper({
+  categoryId,
+  subcategoryId,
+  searchParams,
+}: {
+  categoryId: string;
+  subcategoryId: string;
+  searchParams: { [key: string]: string | string[] | undefined };
+}) {
   const category = categoriesData[categoryId];
   
   if (!category) {
@@ -205,42 +213,62 @@ export default async function SubcategoryPage({ params }: PageProps) {
   }
 
   // Filter products for this subcategory
-  const products = allProducts[categoryId]?.filter(
+  const products = (allProducts[categoryId] || []).filter(
     (product) => product.subcategory === subcategoryId
-  ) || [];
+  );
 
   return (
     <CategoryPage
       category={category}
-      subcategories={category.subcategories.map(sub => ({
-        ...sub,
-        href: `/category/${categoryId}/${sub.id}`
-      }))}
+      subcategory={subcategory}
       products={products}
+      searchParams={searchParams}
     />
   );
 }
 
+export default async function SubcategoryPage({ params, searchParams }: PageProps) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CategoryPageWrapper 
+        categoryId={params.categoryId} 
+        subcategoryId={params.subcategoryId}
+        searchParams={searchParams}
+      />
+    </Suspense>
+  );
+}
+
 export async function generateMetadata({ params }: PageProps) {
-  // Destructure after awaiting params
-  const { categoryId, subcategoryId } = await Promise.resolve(params);
-  
+  const { categoryId, subcategoryId } = params;
   const category = categoriesData[categoryId];
-  const subcategory = category?.subcategories.find(s => s.id === subcategoryId);
+  
+  if (!category) {
+    return {
+      title: 'Category Not Found',
+      description: 'The requested category was not found.'
+    };
+  }
+
+  const subcategory = category.subcategories.find(
+    (sub) => sub.id === subcategoryId
+  );
 
   if (!subcategory) {
     return {
-      title: 'Page Not Found',
+      title: 'Subcategory Not Found',
+      description: 'The requested subcategory was not found.'
     };
   }
 
   return {
-    title: `${subcategory.name} - ${category?.name} | Our Store`,
-    description: `Browse our selection of ${subcategory.name.toLowerCase()} in the ${category?.name.toLowerCase()} category.`,
+    title: `${subcategory.name} - ${category.name} | NexisCart`,
+    description: `Shop the best ${subcategory.name} in ${category.name} at NexisCart. ${category.description}`,
   };
 }
 
-export function generateStaticParams() {
+export async function generateStaticParams() {
+  // Generate all possible category/subcategory combinations at build time
   return Object.values(categoriesData).flatMap((category) =>
     category.subcategories.map((subcategory) => ({
       categoryId: category.id,
@@ -248,3 +276,7 @@ export function generateStaticParams() {
     }))
   );
 }
+
+export const dynamicParams = false; // Return 404 for not generated pages
+
+export const revalidate = 3600; // Revalidate at most every hour

@@ -1,20 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
-    ignoreDuringBuilds: true,
-  },
-  typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors.
-    // !! WARN !!
-    ignoreBuildErrors: true,
-  },
+  output: 'export', // Enable static exports
+  distDir: 'out', // Output directory for the static export
+  trailingSlash: true, // Add trailing slashes to all paths
   images: {
-    unoptimized: true,
+    unoptimized: true, // Disable Image Optimization API for static export
     domains: [
       'images.unsplash.com',
       'plus.unsplash.com',
@@ -25,6 +16,12 @@ const nextConfig = {
       'res.cloudinary.com',
       'lh3.googleusercontent.com'
     ],
+  },
+  eslint: {
+    ignoreDuringBuilds: true, // Ignore ESLint during build
+  },
+  typescript: {
+    ignoreBuildErrors: true, // Ignore TypeScript errors during build
   },
   // Webpack configuration
   webpack: (config) => {
