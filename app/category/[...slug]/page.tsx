@@ -314,6 +314,26 @@ const sampleProducts = [
   }
 ];
 
+export async function generateStaticParams() {
+  // Generate all possible static paths based on your categories and subcategories
+  const paths = mainCategories.flatMap(category => {
+    // Add path for the main category
+    const categoryPaths = [{ slug: [category.id] }];
+    
+    // Add paths for each subcategory
+    const subcategoryPaths = category.subcategories.map(subcategory => ({
+      slug: [category.id, subcategory.id]
+    }));
+    
+    return [...categoryPaths, ...subcategoryPaths];
+  });
+  
+  return paths;
+}
+
+// Add dynamic params configuration to handle 404 for unknown routes
+export const dynamicParams = false;
+
 export default function CategoryPage({ params }: { params: { slug: string[] } }) {
   // Ensure React is in scope for JSX
   const React = require('react');
