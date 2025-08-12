@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+.env*.local
+.vercel
+.vscode
+*.md
+*.mdx
+public/*.png
+public/*.jpg
+public/*.jpeg
+public/*.gif
+public/*.svg
+README.md
